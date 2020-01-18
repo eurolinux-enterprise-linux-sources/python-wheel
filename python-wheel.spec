@@ -13,7 +13,7 @@
 
 Name:           python-%{pypi_name}
 Version:        0.31.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Built-package format for Python
 
 License:        MIT
@@ -21,14 +21,10 @@ URL:            https://github.com/pypa/wheel
 Source0:        %{url}/archive/%{version}/%{pypi_name}-%{version}.tar.gz
 BuildArch:      noarch
 
-# Latest version of wheel requires the package keyrings.alt in order for the tests to pass,
-# however it can't be packaged for Fedora as of yet since the code is not licensed,
-# and as a result wheel fails to build from source.
-# Review request of keyrings.alt: https://bugzilla.redhat.com/show_bug.cgi?id=1365794
-# Until the license issue is resolved upstream, this patch is added to revert
-# the commit from wheel, that introduced this dependency.
-# https://bitbucket.org/pypa/wheel/commits/06841295888fdb430abe12aae29da92107e7360a
-Patch0: remove-keyrings.alt-dependency.patch
+# We need to remove wheel's own implementation of crypto due to FIPS concerns.
+# See more: https://bugzilla.redhat.com/show_bug.cgi?id=1722983
+# Upstream commit: https://github.com/pypa/wheel/commit/d3f5918ccbb1c79e2fc42b7766626a0aa20dc438
+Patch0: removed-wheel-signing-and-verifying-features.patch
 
 %global _description \
 A built-package format for Python.\
@@ -142,6 +138,10 @@ PYTHONPATH=%{buildroot}%{python3_sitelib} py.test-3 -v --ignore build
 %endif
 
 %changelog
+* Mon Jul 22 2019 Tomas Orsava <torsava@redhat.com> - 0.31.1-5
+- Removed wheel's own implementation of crypto due to FIPS concerns
+Resolves: rhbz#1722983
+
 * Mon Jan 14 2019 Lumír Balhar <lbalhar@redhat.com> - 0.31.1-4
 - Converting specfile from F29 to RHEL7
 - Disabled building of the Python 2 subpackage
